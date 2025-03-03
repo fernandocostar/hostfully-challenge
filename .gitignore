@@ -1,0 +1,7 @@
+# Ignore target directory (common for Maven projects)
+target/
+# Ignore IntelliJ IDEA project files
+.idea/
+# Ignore system files
+.DS_Store  # macOS
+Thumbs.db  # Windows
