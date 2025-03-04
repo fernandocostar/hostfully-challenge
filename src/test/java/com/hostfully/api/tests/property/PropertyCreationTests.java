@@ -13,42 +13,9 @@ import static java.util.Optional.empty;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 
-public class PropertyTests extends BaseTest {
+public class PropertyCreationTests extends BaseTest {
 
-    private final String GET_PROPERTIES_ENDPOINT = "/properties";
     private final String POST_PROPERTIES_ENDPOINT = "/properties";
-
-    //GET Properties endpoint
-
-    @Test
-    @DisplayName("GET /properties unauthorized access")
-    public void testGetPropertiesUnauthorized() {
-        given()
-            .auth()
-            .basic("invalid", "credentials")
-        .when()
-            .get(GET_PROPERTIES_ENDPOINT)
-        .then()
-            .statusCode(401);
-    }
-
-    @Test
-    @DisplayName("GET /properties returns correct properties structure")
-    public void testValidGetPropertiesStructure() throws IOException {
-        //TODO: enhance tests by controlling database state, dettaching test scenarios from each other
-        given()
-            .auth()
-            .preemptive()
-            .basic(username, password)
-        .when()
-            .get(GET_PROPERTIES_ENDPOINT)
-        .then()
-            .statusCode(200)
-            .body("$", not(empty()))
-            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/PropertiesDTO.json")));
-    }
-
-    //POST Properties endpoint
 
     @Test
     @DisplayName("POST /properties requires mandatory attributes")

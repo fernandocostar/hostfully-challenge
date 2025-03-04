@@ -1,4 +1,4 @@
-package com.hostfully.api.tests.booking;
+package com.hostfully.api.tests.property;
 
 import com.hostfully.api.config.BaseTest;
 import io.restassured.module.jsv.JsonSchemaValidator;
@@ -12,36 +12,40 @@ import static io.restassured.RestAssured.given;
 import static java.util.Optional.empty;
 import static org.hamcrest.Matchers.not;
 
-public class BookingListingTests extends BaseTest {
+public class PropertyListingTests extends BaseTest {
 
-    private final String GET_BOOKINGS_ENDPOINT = "/bookings";
+    private final String GET_PROPERTIES_ENDPOINT = "/properties";
 
     @Test
-    @DisplayName("GET /bookings unauthorized access")
-    public void testGetBookingsUnauthorized() {
+    @DisplayName("GET /properties unauthorized access")
+    public void testGetPropertiesUnauthorized() {
         given()
             .auth()
-            .preemptive()
             .basic("invalid", "credentials")
         .when()
-            .get(GET_BOOKINGS_ENDPOINT)
+            .get(GET_PROPERTIES_ENDPOINT)
         .then()
             .statusCode(401);
     }
 
     @Test
-    @DisplayName("GET /bookings returns correct bookings structure")
-    public void testValidGetBookingsStructure() throws IOException {
+    @DisplayName("GET /properties returns correct properties structure")
+    public void testValidGetPropertiesStructure() throws IOException {
         given()
             .auth()
             .preemptive()
             .basic(username, password)
         .when()
-            .get(GET_BOOKINGS_ENDPOINT)
+            .get(GET_PROPERTIES_ENDPOINT)
         .then()
             .statusCode(200)
             .body("$", not(empty()))
-            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/BookingListSchema.json")));
+            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/PropertiesDTO.json")));
     }
+
+    //GET PROPERTY BY ID: UNAUTHORIZED
+    //GET PROPERTY BY ID: VALID REQUEST
+    //GET PROPERTY BY ID: INVALID ID
+    //GET PROPERTY BY ID: NON-EXISTING ID
 
 }

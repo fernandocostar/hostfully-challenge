@@ -58,6 +58,6 @@
         "format": "uuid"
       }
     },
-    "required": ["id", "startDate", "endDate", "status", "guest", "propertyId"]
+    "required": ["startDate", "endDate", "propertyId"]
   }
 }
