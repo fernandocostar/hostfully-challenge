@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["https://www.hostfully.com/problems/validation-error"]
+    },
+    "title": {
+      "type": "string",
+      "const": "Validation Error"
+    },
+    "status": {
+      "type": "integer",
+      "const": 400
+    },
+    "detail": {
+      "type": "string",
+      "const": "Validation failed"
+    },
+    "instance": {
+      "type": "string",
+      "enum": ["/properties", "/bookings"]
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "codes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "codes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "minItems": 1
+                },
+                "arguments": {
+                  "type": ["array", "null"]
+                },
+                "defaultMessage": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": ["codes", "defaultMessage", "code"]
+            }
+          },
+          "defaultMessage": {
+            "type": "string"
+          },
+          "objectName": {
+            "type": "string"
+          },
+          "field": {
+            "type": "string"
+          },
+          "rejectedValue": {},
+          "bindingFailure": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string"
+          }
+        },
+        "required": ["codes", "defaultMessage", "objectName", "field", "bindingFailure", "code"]
+      }
+    }
+  },
+  "required": ["type", "title", "status", "detail", "instance", "errors"]
+}
