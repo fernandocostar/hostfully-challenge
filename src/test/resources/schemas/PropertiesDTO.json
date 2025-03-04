@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "alias": {
+        "type": "string"
+      },
+      "countryCode": {
+        "type": ["string", "null"],
+        "enum": ["US", "BR", "PL", "IN"]
+      },
+      "createdAt": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "required": ["alias"]
+  }
+}
