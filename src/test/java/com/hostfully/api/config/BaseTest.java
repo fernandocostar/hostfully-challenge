@@ -1,5 +1,6 @@
 package com.hostfully.api.config;
 
+import io.restassured.http.ContentType;
 import org.junit.jupiter.api.BeforeAll;
 import io.restassured.RestAssured;
 
@@ -34,9 +35,9 @@ public class BaseTest {
             throw new IllegalStateException("Missing api.username or api.password in config.properties");
         }
 
-        System.out.println(username);
-        System.out.println(password);
-
         RestAssured.baseURI = BASE_URL;
+        RestAssured.requestSpecification = RestAssured.given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON);
     }
 }
