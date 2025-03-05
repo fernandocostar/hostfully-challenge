@@ -10,7 +10,7 @@ import static com.hostfully.api.utils.requests.GuestDTOFactory.createValidGuest;
 
 public class BookingDTOFactory {
 
-    private static final String VALID_EXISTING_PROPERTY_ID = "a05018e8-c9f4-430c-8de2-abc3a8e58c21";
+    private static final String VALID_EXISTING_PROPERTY_ID = "7a58559f-1a64-4c24-a4f7-28a6b81302cc";
 
     private static final Faker faker = new Faker();
 
@@ -25,18 +25,22 @@ public class BookingDTOFactory {
     }
 
     public static JSONObject createValidBookingPayload() {
+        return createBookingPayloadPassingGuest(createValidGuest());
+    }
+
+    public static JSONObject createBookingPayloadPassingGuest(JSONObject guest) {
         LocalDate startDate = getStartDate();
         return new JSONObject()
                 .put("id", UUID.randomUUID().toString())
                 .put("startDate", startDate)
                 .put("endDate", getEndDate(startDate))
                 .put("status", "SCHEDULED")
-                .put("guest", createValidGuest())
+                .put("guest", guest)
                 .put("propertyId", VALID_EXISTING_PROPERTY_ID);
     }
 
     private static LocalDate getStartDate() {
-        return LocalDate.now().plusDays(faker.number().numberBetween(1, 1000));
+        return LocalDate.now().plusDays(faker.number().numberBetween(1, 10000));
     }
 
     private static LocalDate getEndDate(LocalDate startDate) {

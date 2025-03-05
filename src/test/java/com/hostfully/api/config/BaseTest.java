@@ -1,8 +1,15 @@
 package com.hostfully.api.config;
 
+import io.restassured.filter.log.RequestLoggingFilter;
+import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.http.ContentType;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import io.restassured.RestAssured;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,10 +17,18 @@ import java.util.Properties;
 
 public class BaseTest {
 
+    private static final Log log = LogFactory.getLog(BaseTest.class);
+    private static TestInfo testInfo;
+
     protected static final String BASE_URL = "https://qa-assessment.svc.hostfully.com";
 
     protected static String username;
     protected static String password;
+
+    @BeforeEach
+    public void beforeEach(TestInfo testInfo) {
+        log.info("Starting test: " + testInfo.getDisplayName());
+    }
 
     @BeforeAll
     public static void setUp() throws IOException {
@@ -39,5 +54,13 @@ public class BaseTest {
         RestAssured.requestSpecification = RestAssured.given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON);
+        RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
+
     }
+
+    @AfterEach
+    public void afterEach(TestInfo testInfo) {
+        log.info("Finished test: " + testInfo.getDisplayName());
+    }
+
 }

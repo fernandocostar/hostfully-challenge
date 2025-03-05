@@ -10,8 +10,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import static com.hostfully.api.utils.FileUtils.readJsonFile;
-import static com.hostfully.api.utils.requests.BookingDTOFactory.createInexistingBookingPayload;
-import static com.hostfully.api.utils.requests.BookingDTOFactory.createValidBookingPayload;
+import static com.hostfully.api.utils.requests.BookingDTOFactory.*;
+import static com.hostfully.api.utils.requests.GuestDTOFactory.createValidGuest;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 
@@ -22,23 +22,33 @@ public class BookingCreationTests extends BaseTest {
 
     private final String POST_BOOKINGS_ENDPOINT = "/bookings";
 
+    private static Stream<String> bookingMandatoryAttributes() {
+        return Stream.of("startDate", "endDate", "propertyId");
+    }
+    private static Stream<String> bookingOptionalAttributes() {
+        return Stream.of("id", "status", "guest");
+    }
+    private static Stream<String> guestMandatoryAttributes() {
+        return Stream.of("firstName", "lastName");
+    }
+
     @Test
-    @DisplayName("POST /bookings unauthorized access")
-    public void testPostBookingsUnauthorized() throws IOException {
+    @DisplayName("POST /bookings fails on unauthorized access")
+    public void testErrorUnauthorizedBookingCreation() throws IOException {
         given()
-                .auth()
-                .preemptive()
-                .basic("invalid", "credentials")
-                .when()
-                .post(POST_BOOKINGS_ENDPOINT)
-                .then()
-                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/BookingErrorSchemaDTO.json")))
-                .statusCode(401);
+            .auth()
+            .preemptive()
+            .basic("invalid", "credentials")
+        .when()
+            .post(POST_BOOKINGS_ENDPOINT)
+        .then()
+            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/BookingErrorSchemaDTO.json")))
+            .statusCode(401);
     }
 
     @Test
     @DisplayName("POST /bookings fails to add inexisting property")
-    public void testErrorWhenBookingInexistingProperty() throws IOException {
+    public void testErrorWhenBookingInexistingProperty() {
 
         JSONObject requestPayload = createInexistingBookingPayload();
 
@@ -56,20 +66,38 @@ public class BookingCreationTests extends BaseTest {
     }
 
     @Test
-    @DisplayName("POST /bookings creates a booking with mandatory attributes only") //TODO: review and fix
-    public void testCreateBookingWithMandatoryAttributes() throws IOException {
+    @DisplayName("POST /bookings fails to book with invalid status")
+    public void testErrorWhenBookingContainsInvalidStatus(){
 
         JSONObject requestPayload = createValidBookingPayload();
-
-        requestPayload.remove("id");
         requestPayload.remove("status");
-        requestPayload.remove("guest");
+        requestPayload.put("status", "INVALID");
 
         given()
             .auth()
             .preemptive()
             .basic(username, password)
-            .body(requestPayload.toString()).log().all()
+            .body(requestPayload.toString())
+        .when()
+            .post(POST_BOOKINGS_ENDPOINT)
+        .then()
+            .statusCode(400)
+            .body("title", is("Bad Request"))
+            .body("detail", is("Failed to read request"));
+    }
+
+    //VALID BOOKING CREATION
+    @Test
+    @DisplayName("POST /bookings creates a booking without optional attributes")
+    public void testCreateBookingSuccessfully() throws IOException {
+
+        JSONObject requestPayload = createValidBookingPayload();
+
+        given()
+            .auth()
+            .preemptive()
+            .basic(username, password)
+            .body(requestPayload.toString())
         .when()
             .post(POST_BOOKINGS_ENDPOINT)
         .then()
@@ -78,11 +106,31 @@ public class BookingCreationTests extends BaseTest {
     }
 
     @ParameterizedTest
-    @MethodSource("bookingMandatoryFields")
+    @MethodSource("bookingOptionalAttributes")
+    @DisplayName("POST /bookings creates a booking without optional attributes")
+    public void testCreateBookingWithoutOptionalAttributes(String optionalAttribute) throws IOException {
+
+        JSONObject requestPayload = createValidBookingPayload();
+        requestPayload.remove(optionalAttribute);
+
+        given()
+            .auth()
+            .preemptive()
+            .basic(username, password)
+            .body(requestPayload.toString())
+        .when()
+            .post(POST_BOOKINGS_ENDPOINT)
+        .then()
+            .statusCode(201)
+            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/BookingCreationSchema.json")));
+    }
+
+    @ParameterizedTest
+    @MethodSource("bookingMandatoryAttributes")
     @DisplayName("POST /bookings fails when missing mandatory attributes")
     public void testErrorWhenBookingMissingMandatoryAttributes(String missingField) {
         JSONObject requestPayload = createValidBookingPayload();
-        requestPayload.remove(missingField); // Remove the field dynamically
+        requestPayload.remove(missingField);
 
         given()
             .auth()
@@ -98,8 +146,32 @@ public class BookingCreationTests extends BaseTest {
             .body("errors[0].code", is("NotNull"));
     }
 
-    private static Stream<String> bookingMandatoryFields() {
-        return Stream.of("startDate", "endDate", "propertyId");
+    @ParameterizedTest
+    @MethodSource("guestMandatoryAttributes")
+    @DisplayName("POST /bookings fails when missing mandatory Guest attributes")
+    public void testErrorWhenBookingMissingGuestMandatoryAttributes(String missingField) {
+        JSONObject guest = createValidGuest();
+        guest.remove(missingField);
+
+        JSONObject requestPayload = createBookingPayloadPassingGuest(guest);
+
+        given()
+            .auth()
+            .preemptive()
+            .basic(username, password)
+            .body(requestPayload.toString())
+        .when()
+            .post(POST_BOOKINGS_ENDPOINT)
+        .then()
+            .statusCode(400)
+            .body("title", is("Validation Error"))
+            .body("errors[0].field", is("guest." + missingField))
+            .body("errors[0].code", is("NotNull"));
     }
+
+    //TESTS HAVE DEPENDENCY AMONG FEATURES - BETTER WAY WOULD BE DOING INTEGRATION TESTS OR DB INJECTION IN PROPER ENVIRONMENT
+
+    //BOOKING OVERLAPPING DATES (BOUNDARY + CONTAINS)
+    //PATCH ENDPOINTS
 
 }
