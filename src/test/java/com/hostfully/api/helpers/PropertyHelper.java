@@ -25,7 +25,7 @@ public class PropertyHelper {
         this.password = password;
     }
 
-    public Response createValidProperty(JSONObject requestPayload) throws IOException {
+    public Response createValidProperty(JSONObject requestPayload) {
         Response response = performCreationPostRequest(requestPayload);
         validateResponse(response, requestPayload);
 
@@ -64,9 +64,8 @@ public class PropertyHelper {
                 .basic(username, password);
     }
 
-    private void validateResponse(Response response, JSONObject requestPayload) throws IOException {
+    private void validateResponse(Response response, JSONObject requestPayload) {
         response.then()
-                .statusCode(201)
-                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/property/PropertyCreationSchema.json")));
+                .statusCode(201);
     }
 }

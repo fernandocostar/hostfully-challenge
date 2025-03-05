@@ -90,4 +90,6 @@ public class BookingUpdateTests extends BaseTest {
                 .body("CANNOT_REBOOK_NOT_CANCELLED_BOOKING", is("CANNOT_REBOOK_NOT_CANCELLED_BOOKING"));
     }
 
+    //TODO: Successful rebook
+
 }
