@@ -12,12 +12,11 @@ import java.io.IOException;
 import java.util.Random;
 
 import static com.hostfully.api.utils.FileUtils.readJsonFile;
+import static com.hostfully.api.utils.requests.PropertyDTOFactory.createRequiredOnlyPropertyPayload;
 import static com.hostfully.api.utils.requests.PropertyDTOFactory.createValidPropertyPayload;
 import static org.hamcrest.Matchers.is;
 
 public class PropertyCreationTests extends BaseTest {
-
-    private final String POST_PROPERTIES_ENDPOINT = "/properties";
 
     @Test
     @DisplayName("POST /properties requires mandatory attributes")
@@ -34,7 +33,7 @@ public class PropertyCreationTests extends BaseTest {
                 .body("detail", is("Validation failed"))
                 .body("errors[0].field", is("alias"))
                 .body("errors[0].code", is("NotNull"))
-                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/common/ValidationErrorDTO.json")));
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/common/ValidationErrorSchema.json")));
     }
 
     @Test
@@ -51,7 +50,21 @@ public class PropertyCreationTests extends BaseTest {
                 .statusCode(400)
                 .body("title", is("Validation Error"))
                 .body("detail", is("Invalid attribute type"))
-                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/common/ValidationErrorDTO.json")));
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/common/ValidationErrorSchema.json")));
+    }
+
+    @Test
+    @DisplayName("POST /properties sending only mandatory attributes")
+    public void testCreatePropertySendingOnlyAttributes() throws IOException {
+        PropertyHelper authorizedPropertyHelper = new PropertyHelper(username, password);
+
+        JSONObject requiredOnlyPayload = createRequiredOnlyPropertyPayload();
+
+        Response response = authorizedPropertyHelper.performCreationPostRequest(requiredOnlyPayload);
+        response.then()
+                .statusCode(201)
+                .body("alias", is(requiredOnlyPayload.getString("alias")))
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/property/CreatePropertySchema.json")));
     }
 
     //POST PROPERTIES: INVALID OPTIONAL ATTRIBUTES

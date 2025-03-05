@@ -40,7 +40,7 @@ public class PropertyListingTests extends BaseTest {
         .then()
             .statusCode(200)
             .body("$", not(empty()))
-            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/PropertiesDTO.json")));
+            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/GetPropertiesSchema.json")));
     }
 
     //GET PROPERTY BY ID: UNAUTHORIZED

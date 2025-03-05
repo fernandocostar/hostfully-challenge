@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "A unique identifier for the property"
+    },
+    "alias": {
+      "type": "string",
+      "description": "Alias or name of the property (required)"
+    },
+    "countryCode": {
+      "type": ["null","string"],
+      "enum": ["US", "BR", "PL", "IN", null],
+      "description": "The country code (optional, can be null, but if provided, must be one of the specified values)"
+    },
+    "createdAt": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 7,
+      "maxItems": 7,
+      "description": "The creation date as an array (Year, Month, Day, Hour, Minute, Second, Millisecond)"
+    }
+  },
+  "required": ["id", "alias", "createdAt"],
+  "additionalProperties": false
+}

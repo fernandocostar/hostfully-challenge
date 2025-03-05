@@ -44,7 +44,7 @@ public class BookingCreationTests extends BaseTest {
         Response response = unauthorizedBookingHelper.performCreationPostRequest(createValidBookingPayload());
 
         response.then()
-                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/booking/BookingErrorSchemaDTO.json")))
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/booking/BookingErrorSchema.json")))
                 .statusCode(401);
     }
 
