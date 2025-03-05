@@ -2,6 +2,9 @@
 target/
 # Ignore IntelliJ IDEA project files
 .idea/
+# Allure
+.allure/
+allure-results/
 # Ignore system files
 .DS_Store  # macOS
 Thumbs.db  # Windows
