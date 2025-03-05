@@ -2,6 +2,7 @@ package com.hostfully.api.tests.booking;
 
 import com.hostfully.api.config.BaseTest;
 
+import com.hostfully.api.helpers.BookingHelper;
 import io.restassured.module.jsv.JsonSchemaValidator;
 import io.restassured.response.Response;
 import org.json.JSONObject;
@@ -16,7 +17,6 @@ import static com.hostfully.api.utils.DateUtils.getStartDate;
 import static com.hostfully.api.utils.FileUtils.readJsonFile;
 import static com.hostfully.api.utils.requests.BookingDTOFactory.*;
 import static com.hostfully.api.utils.requests.GuestDTOFactory.createValidGuest;
-import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 
 import java.io.IOException;
@@ -38,86 +38,53 @@ public class BookingCreationTests extends BaseTest {
         return Stream.of("firstName", "lastName");
     }
 
-    private Response createValidBooking(JSONObject requestPayload) throws IOException {
-
-        String startDate = requestPayload.get("startDate").toString();
-        String endDate = requestPayload.get("endDate").toString();
-
-        List<Integer> expectedStartDate = castToDateList(startDate);
-        List<Integer> expectedEndDate = castToDateList(endDate);
-
-        return given()
-            .auth()
-            .preemptive()
-            .basic(username, password)
-            .body(requestPayload.toString())
-        .when()
-            .post(POST_BOOKINGS_ENDPOINT)
-        .then()
-            .statusCode(201)
-            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/BookingCreationSchema.json")))
-            .body("status", is(requestPayload.get("status")))
-            .body("propertyId", is(requestPayload.get("propertyId")))
-            .body("startDate", is(expectedStartDate))
-            .body("endDate", is(expectedEndDate))
-            .extract().response();
-    }
-
     @Test
     @DisplayName("POST /bookings fails on unauthorized access")
     public void testErrorUnauthorizedBookingCreation() throws IOException {
-        given()
-            .auth()
-            .preemptive()
-            .basic("invalid", "credentials")
-        .when()
-            .post(POST_BOOKINGS_ENDPOINT)
-        .then()
-            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/BookingErrorSchemaDTO.json")))
-            .statusCode(401);
+        BookingHelper unauthorizedBookingHelper = new BookingHelper("invalid", "credentials");
+
+        Response response = unauthorizedBookingHelper.performCreationPostRequest(createValidBookingPayload());
+
+        response.then()
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/booking/BookingErrorSchemaDTO.json")))
+                .statusCode(401);
     }
 
     @Test
     @DisplayName("POST /bookings fails to add inexisting property")
     public void testErrorWhenBookingInexistingProperty() {
         JSONObject requestPayload = createInexistingBookingPayload();
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
 
-        given()
-            .auth()
-            .preemptive()
-            .basic(username, password)
-            .body(requestPayload.toString())
-        .when()
-            .post(POST_BOOKINGS_ENDPOINT)
-        .then()
-            .statusCode(400)
-            .body("title", is("Property not found"))
-            .body("detail", is("Property with identifier " + requestPayload.get("propertyId") + " could not be found"));
+        Response response = authorizedBookingHelper.performCreationPostRequest(requestPayload);
+        response.then()
+                .statusCode(400)
+                .body("title", is("Property not found"))
+                .body("detail", is("Property with identifier " + requestPayload.get("propertyId") + " could not be found"));
+
     }
 
     @Test
     @DisplayName("POST /bookings fails to book with invalid status")
     public void testErrorWhenBookingContainsInvalidStatus(){
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
+
         JSONObject requestPayload = createValidBookingPayload();
         requestPayload.remove("status");
         requestPayload.put("status", "INVALID");
 
-        given()
-            .auth()
-            .preemptive()
-            .basic(username, password)
-            .body(requestPayload.toString())
-        .when()
-            .post(POST_BOOKINGS_ENDPOINT)
-        .then()
-            .statusCode(400)
-            .body("title", is("Bad Request"))
-            .body("detail", is("Failed to read request"));
+        Response response = authorizedBookingHelper.performCreationPostRequest(requestPayload);
+        response.then()
+                .statusCode(400)
+                .body("title", is("Bad Request"))
+                .body("detail", is("Failed to read request"));
     }
 
     @Test
     @DisplayName("POST /bookings creates a booking successfully")
     public void testCreateBookingSuccessfully() throws IOException {
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
+
         JSONObject requestPayload = createValidBookingPayload();
         JSONObject requestGuest = (JSONObject) requestPayload.get("guest");
 
@@ -125,92 +92,73 @@ public class BookingCreationTests extends BaseTest {
         List<Integer> expectedEndDate = castToDateList(requestPayload.get("endDate").toString());
         List<Integer> expectedGuestDateOfBirth = castToDateList(requestGuest.get("dateOfBirth").toString());
 
-        given()
-            .auth()
-            .preemptive()
-            .basic(username, password)
-            .body(requestPayload.toString())
-        .when()
-            .post(POST_BOOKINGS_ENDPOINT)
-        .then()
-            .statusCode(201)
-            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/BookingCreationSchema.json")))
-            .body("status", is(requestPayload.get("status")))
-            .body("propertyId", is(requestPayload.get("propertyId")))
-            .body("startDate", is(expectedStartDate))
-            .body("endDate", is(expectedEndDate))
-            .body("guest.firstName", is(requestGuest.get("firstName")))
-            .body("guest.lastName", is(requestGuest.get("lastName")))
-            .body("guest.dateOfBirth", is(expectedGuestDateOfBirth));
+        Response response = authorizedBookingHelper.createValidBooking(requestPayload);
+        response.then()
+                .statusCode(201)
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/booking/BookingCreationSchema.json")))
+                .body("status", is(requestPayload.get("status")))
+                .body("propertyId", is(requestPayload.get("propertyId")))
+                .body("startDate", is(expectedStartDate))
+                .body("endDate", is(expectedEndDate))
+                .body("guest.firstName", is(requestGuest.get("firstName")))
+                .body("guest.lastName", is(requestGuest.get("lastName")))
+                .body("guest.dateOfBirth", is(expectedGuestDateOfBirth));
     }
 
     @ParameterizedTest
     @MethodSource("bookingOptionalAttributes")
     @DisplayName("POST /bookings creates a booking without optional attributes")
     public void testCreateBookingWithoutOptionalAttributes(String optionalAttribute) throws IOException {
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
+
         JSONObject requestPayload = createValidBookingPayload();
         requestPayload.remove(optionalAttribute);
 
         List<Integer> expectedStartDate = castToDateList(requestPayload.get("startDate").toString());
         List<Integer> expectedEndDate = castToDateList(requestPayload.get("endDate").toString());
 
-        given()
-            .auth()
-            .preemptive()
-            .basic(username, password)
-            .body(requestPayload.toString())
-        .when()
-            .post(POST_BOOKINGS_ENDPOINT)
-        .then()
-            .statusCode(201)
-            .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/BookingCreationSchema.json")))
-            .body("propertyId", is(requestPayload.get("propertyId")))
-            .body("startDate", is(expectedStartDate))
-            .body("endDate", is(expectedEndDate));
+        Response response = authorizedBookingHelper.performCreationPostRequest(requestPayload);
+        response.then()
+                .statusCode(201)
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/booking/BookingCreationSchema.json")))
+                .body("propertyId", is(requestPayload.get("propertyId")))
+                .body("startDate", is(expectedStartDate))
+                .body("endDate", is(expectedEndDate));
     }
 
     @ParameterizedTest
     @MethodSource("bookingMandatoryAttributes")
     @DisplayName("POST /bookings fails when missing mandatory attributes")
     public void testErrorWhenBookingMissingMandatoryAttributes(String missingField) {
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
+
         JSONObject requestPayload = createValidBookingPayload();
         requestPayload.remove(missingField);
 
-        given()
-            .auth()
-            .preemptive()
-            .basic(username, password)
-            .body(requestPayload.toString())
-        .when()
-            .post(POST_BOOKINGS_ENDPOINT)
-        .then()
-            .statusCode(400)
-            .body("title", is("Validation Error"))
-            .body("errors[0].field", is(missingField))
-            .body("errors[0].code", is("NotNull"));
+        Response response = authorizedBookingHelper.performCreationPostRequest(requestPayload);
+        response.then()
+                .statusCode(400)
+                .body("title", is("Validation Error"))
+                .body("errors[0].field", is(missingField))
+                .body("errors[0].code", is("NotNull"));
     }
 
     @ParameterizedTest
     @MethodSource("guestMandatoryAttributes")
     @DisplayName("POST /bookings fails when missing mandatory Guest attributes")
     public void testErrorWhenBookingMissingGuestMandatoryAttributes(String missingField) {
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
+
         JSONObject guest = createValidGuest();
         guest.remove(missingField);
-
         JSONObject requestPayload = createBookingPayloadPassingGuest(guest);
 
-        given()
-            .auth()
-            .preemptive()
-            .basic(username, password)
-            .body(requestPayload.toString())
-        .when()
-            .post(POST_BOOKINGS_ENDPOINT)
-        .then()
-            .statusCode(400)
-            .body("title", is("Validation Error"))
-            .body("errors[0].field", is("guest." + missingField))
-            .body("errors[0].code", is("NotNull"));
+        Response response = authorizedBookingHelper.performCreationPostRequest(requestPayload);
+        response.then()
+                .statusCode(400)
+                .body("title", is("Validation Error"))
+                .body("errors[0].field", is("guest." + missingField))
+                .body("errors[0].code", is("NotNull"));
     }
 
     //TESTS HAVE DEPENDENCY AMONG FEATURES - BETTER WAY WOULD BE DOING INTEGRATION TESTS OR DB INJECTION IN A PROPER ENVIRONMENT
@@ -218,9 +166,11 @@ public class BookingCreationTests extends BaseTest {
     @Test
     @DisplayName("POST /bookings - create booking for property starting after previous booking ends")
     public void testCreateTwoBookingsSecondAfterFirst() throws IOException {
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
+
         //First booking
         JSONObject requestPayload = createValidBookingPayload();
-        createValidBooking(requestPayload);
+        authorizedBookingHelper.createValidBooking(requestPayload);
 
         //Switching dates to create a second booking
         requestPayload.put("startDate", requestPayload.get("endDate"));
@@ -229,15 +179,20 @@ public class BookingCreationTests extends BaseTest {
         List<Integer> secondExpectedEndDate = castToDateList(requestPayload.get("endDate").toString());
 
         //Second booking
-        createValidBooking(requestPayload);
+        Response response = authorizedBookingHelper.createValidBooking(requestPayload);
+        response.then()
+                    .body("startDate", is(secondExpectedStartDate))
+                    .body("endDate", is(secondExpectedEndDate));
     }
 
     @Test
     @DisplayName("POST /bookings - create booking for property finishing before next booking starts")
     public void testCreateTwoBookingsSecondBeforeFirst() throws IOException {
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
+
         //First booking
         JSONObject requestPayload = createValidBookingPayload();
-        createValidBooking(requestPayload);
+        authorizedBookingHelper.createValidBooking(requestPayload);
 
         //Switching dates to create a second booking
         requestPayload.put("endDate", requestPayload.get("startDate"));
@@ -246,7 +201,10 @@ public class BookingCreationTests extends BaseTest {
         List<Integer> secondExpectedEndDate = castToDateList(requestPayload.get("endDate").toString());
 
         //Second booking
-        createValidBooking(requestPayload);
+        Response response = authorizedBookingHelper.createValidBooking(requestPayload);
+        response.then()
+                    .body("startDate", is(secondExpectedStartDate))
+                    .body("endDate", is(secondExpectedEndDate));
     }
 
     // Generates combinations of booking dates to test different booking overlaps
@@ -283,30 +241,26 @@ public class BookingCreationTests extends BaseTest {
     @MethodSource("generateBookingDateCombinations")
     @DisplayName("POST /bookings - test multiple booking overlaps")
     public void testBookingOverlap(String firstStartDate, String firstEndDate, String secondStartDate, String secondEndDate) throws IOException {
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
 
         //First booking
         JSONObject firstBookingPayload = createValidBookingPayload();
         firstBookingPayload.put("startDate", firstStartDate);
         firstBookingPayload.put("endDate", firstEndDate);
-        createValidBooking(firstBookingPayload);
+        authorizedBookingHelper.createValidBooking(firstBookingPayload);
 
         // Second booking
         JSONObject secondBookingPayload = new JSONObject(firstBookingPayload.toString());
         secondBookingPayload.put("startDate", secondStartDate);
         secondBookingPayload.put("endDate", secondEndDate);
 
-        given()
-            .auth()
-            .preemptive()
-            .basic(username, password)
-            .body(secondBookingPayload.toString())
-        .when()
-            .post(POST_BOOKINGS_ENDPOINT)
-        .then()
-            .statusCode(422)
-            .body("title", is("Invalid Booking"))
-            .body("detail", is("Supplied booking is not valid"))
-            .body("BOOKING_DATES_UNAVAILABLE", is("BOOKING_DATES_UNAVAILABLE"));
+        Response response = authorizedBookingHelper.performCreationPostRequest(secondBookingPayload);
+        response.then()
+                .statusCode(422)
+                .body("title", is("Invalid Booking"))
+                .body("detail", is("Supplied booking is not valid"))
+                .body("BOOKING_DATES_UNAVAILABLE", is("BOOKING_DATES_UNAVAILABLE"));
+
     }
 
     //TODO: BOOK OVERLAPPING CANCELLED BOOKING - WOULD USE DIFFERENT FEATURES
