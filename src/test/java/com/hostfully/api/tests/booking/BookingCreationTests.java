@@ -26,8 +26,6 @@ import java.util.stream.Stream;
 
 public class BookingCreationTests extends BaseTest {
 
-    private final String POST_BOOKINGS_ENDPOINT = "/bookings";
-
     private static Stream<String> bookingMandatoryAttributes() {
         return Stream.of("startDate", "endDate", "propertyId");
     }

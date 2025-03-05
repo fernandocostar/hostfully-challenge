@@ -16,7 +16,13 @@ public class BookingHelper {
 
     private final String username;
     private final String password;
-    private final String POST_BOOKINGS_ENDPOINT = "/bookings"; //TODO: get from centralized endpoints file
+
+    //TODO: get from centralized endpoints file
+    private final String POST_BOOKINGS_ENDPOINT = "/bookings";
+    private final String PATCH_CANCEL_BOOKING_ENDPOINT = "/bookings/{bookingId}/cancel";
+    private final String PATCH_GUEST_BOOKING_ENDPOINT = "/bookings/{bookingId}/guest";
+    private final String PATCH_REOOKING_ENDPOINT = "/bookings/{bookingId}/rebook";
+    private final String GET_BOOKINGS_ENDPOINT = "/bookings";
 
     public BookingHelper(String username, String password) {
         this.username = username;
@@ -33,11 +39,45 @@ public class BookingHelper {
         return response;
     }
 
+    public Response performGetRequest() {
+        return authenticateRequest()
+                .when()
+                    .get(GET_BOOKINGS_ENDPOINT)
+                .then()
+                    .extract().response();
+    }
+
     public Response performCreationPostRequest(JSONObject requestPayload) {
         return authenticateRequest()
                     .body(requestPayload.toString())
                 .when()
                     .post(POST_BOOKINGS_ENDPOINT)
+                .then()
+                    .extract().response();
+    }
+
+    public Response performCancelPatchRequest(String bookingId) {
+        return authenticateRequest()
+                .when()
+                    .patch(PATCH_CANCEL_BOOKING_ENDPOINT.replace("{bookingId}", bookingId))
+                .then()
+                    .extract().response();
+    }
+
+    public Response performGuestUpdatePatchRequest(String bookingId, JSONObject requestPayload) {
+        return authenticateRequest()
+                .body(requestPayload.toString())
+                .when()
+                    .patch(PATCH_GUEST_BOOKING_ENDPOINT.replace("{bookingId}", bookingId))
+                .then()
+                    .extract().response();
+    }
+
+    public Response performRebookPatchRequest(String bookingId, JSONObject requestPayload) {
+        return authenticateRequest()
+                .body(requestPayload.toString())
+                .when()
+                    .patch(PATCH_REOOKING_ENDPOINT.replace("{bookingId}", bookingId))
                 .then()
                     .extract().response();
     }
