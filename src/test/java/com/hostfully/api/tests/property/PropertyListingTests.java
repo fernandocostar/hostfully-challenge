@@ -48,4 +48,6 @@ public class PropertyListingTests extends BaseTest {
     //GET PROPERTY BY ID: INVALID ID
     //GET PROPERTY BY ID: NON-EXISTING ID
 
+    //E2E create and consult by id
+
 }
