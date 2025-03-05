@@ -6,6 +6,8 @@ import org.json.JSONObject;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import static com.hostfully.api.utils.DateUtils.getEndDate;
+import static com.hostfully.api.utils.DateUtils.getStartDate;
 import static com.hostfully.api.utils.requests.GuestDTOFactory.createValidGuest;
 
 public class BookingDTOFactory {
@@ -16,7 +18,6 @@ public class BookingDTOFactory {
 
     public static JSONObject createInexistingBookingPayload() {
         return new JSONObject()
-                .put("id", UUID.randomUUID().toString())
                 .put("startDate", "2025-03-04")
                 .put("endDate", "2025-03-04")
                 .put("status", "SCHEDULED")
@@ -31,20 +32,11 @@ public class BookingDTOFactory {
     public static JSONObject createBookingPayloadPassingGuest(JSONObject guest) {
         LocalDate startDate = getStartDate();
         return new JSONObject()
-                .put("id", UUID.randomUUID().toString())
                 .put("startDate", startDate)
                 .put("endDate", getEndDate(startDate))
                 .put("status", "SCHEDULED")
                 .put("guest", guest)
                 .put("propertyId", VALID_EXISTING_PROPERTY_ID);
-    }
-
-    private static LocalDate getStartDate() {
-        return LocalDate.now().plusDays(faker.number().numberBetween(1, 10000));
-    }
-
-    private static LocalDate getEndDate(LocalDate startDate) {
-        return startDate.plusDays(faker.number().numberBetween(1, 2));
     }
 
 }

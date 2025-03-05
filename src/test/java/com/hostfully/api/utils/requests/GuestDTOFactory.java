@@ -16,4 +16,5 @@ public class GuestDTOFactory {
                 .put("lastName", faker.name().lastName())
                 .put("dateOfBirth", "2025-03-04");
     }
+
 }
