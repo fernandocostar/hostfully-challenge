@@ -2,6 +2,7 @@ package com.hostfully.api.tests.property;
 
 import com.hostfully.api.config.BaseTest;
 import com.hostfully.api.helpers.PropertyHelper;
+import com.hostfully.api.utils.matchers.UUIDMatcher;
 import io.restassured.module.jsv.JsonSchemaValidator;
 import io.restassured.response.Response;
 import org.json.JSONObject;
@@ -17,6 +18,22 @@ import static com.hostfully.api.utils.requests.PropertyDTOFactory.createValidPro
 import static org.hamcrest.Matchers.is;
 
 public class PropertyCreationTests extends BaseTest {
+
+    @Test
+    @DisplayName("POST /properties create property")
+    public void testCreatePropertyWithSuccess() throws IOException {
+        PropertyHelper authorizedPropertyHelper = new PropertyHelper(username, password);
+
+        JSONObject propertyPayload = createValidPropertyPayload();
+
+        Response response = authorizedPropertyHelper.performCreationPostRequest(propertyPayload);
+        response.then()
+                .statusCode(201)
+                .body("id", UUIDMatcher.isValidUUID())
+                .body("alias", is(propertyPayload.getString("alias")))
+                .body("countryCode", is(propertyPayload.getString("countryCode")))
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/property/CreatePropertySchema.json")));
+    }
 
     @Test
     @DisplayName("POST /properties requires mandatory attributes")
