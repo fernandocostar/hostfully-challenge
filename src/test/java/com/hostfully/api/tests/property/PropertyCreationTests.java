@@ -67,8 +67,4 @@ public class PropertyCreationTests extends BaseTest {
                 .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/property/CreatePropertySchema.json")));
     }
 
-    //POST PROPERTIES: INVALID OPTIONAL ATTRIBUTES
-    //POST PROPERTIES: VALID REQUEST WITHOUT OPTIONAL ATTRIBUTES
-    //POST PROPERTIES: VALID REQUEST WITH OPTIONAL ATTRIBUTES
-
 }

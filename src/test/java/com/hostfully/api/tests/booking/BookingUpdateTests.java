@@ -90,6 +90,25 @@ public class BookingUpdateTests extends BaseTest {
                 .body("CANNOT_REBOOK_NOT_CANCELLED_BOOKING", is("CANNOT_REBOOK_NOT_CANCELLED_BOOKING"));
     }
 
-    //TODO: Successful rebook
+    @Test
+    @DisplayName("PATCH /bookings/{bookingId}/rebook - rebook cancelled booking")
+    public void testRebookCancelledBooking() throws IOException {
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
+
+        //Create booking
+        JSONObject requestPayload = createValidBookingPayload();
+        Response response = authorizedBookingHelper.createValidBooking(requestPayload);
+        String bookingId = response.jsonPath().get("id");
+
+        //Cancel booking
+        authorizedBookingHelper.performCancelPatchRequest(bookingId).then().statusCode(200);
+
+        Response rebookResponse = authorizedBookingHelper.performRebookPatchRequest(bookingId, requestPayload);
+        rebookResponse.then()
+                .statusCode(200)
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/booking/BookingCreationSchema.json")))
+                .body("status", is(requestPayload.get("status")))
+                .body("propertyId", is(requestPayload.get("propertyId")));
+    }
 
 }

@@ -50,7 +50,7 @@ public class BookingCreationTests extends BaseTest {
 
     @Test
     @DisplayName("POST /bookings fails to add inexisting property")
-    public void testErrorWhenBookingInexistingProperty() {
+    public void testErrorWhenBookingNonexistentProperty() {
         JSONObject requestPayload = createInexistingBookingPayload();
         BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
 
@@ -64,7 +64,7 @@ public class BookingCreationTests extends BaseTest {
 
     @Test
     @DisplayName("POST /bookings fails to book with invalid status")
-    public void testErrorWhenBookingContainsInvalidStatus(){
+    public void testErrorWhenBookingWithInvalidStatus(){
         BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
 
         JSONObject requestPayload = createValidBookingPayload();
@@ -80,7 +80,7 @@ public class BookingCreationTests extends BaseTest {
 
     @Test
     @DisplayName("POST /bookings creates a booking successfully")
-    public void testCreateBookingSuccessfully() throws IOException {
+    public void testCreateBookingReturnsSuccess() throws IOException {
         BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
 
         JSONObject requestPayload = createValidBookingPayload();
@@ -163,7 +163,7 @@ public class BookingCreationTests extends BaseTest {
 
     @Test
     @DisplayName("POST /bookings - create booking for property starting after previous booking ends")
-    public void testCreateTwoBookingsSecondAfterFirst() throws IOException {
+    public void testCreateTwoBookingsWithSecondBookingAfterFirst() throws IOException {
         BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
 
         //First booking
@@ -185,7 +185,7 @@ public class BookingCreationTests extends BaseTest {
 
     @Test
     @DisplayName("POST /bookings - create booking for property finishing before next booking starts")
-    public void testCreateTwoBookingsSecondBeforeFirst() throws IOException {
+    public void testCreateTwoBookingsWithSecondBookingBeforeFirst() throws IOException {
         BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
 
         //First booking
@@ -262,4 +262,32 @@ public class BookingCreationTests extends BaseTest {
     }
 
     //TODO: BOOK OVERLAPPING CANCELLED BOOKING - WOULD USE DIFFERENT FEATURES
+    @Test
+    @DisplayName("POST /bookings - test booking overlap with cancelled booking")
+    public void testBookingOverlapWithCancelledBooking() throws IOException {
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
+
+        //First booking
+        JSONObject firstBookingPayload = createValidBookingPayload();
+        Response firstBookingResponse = authorizedBookingHelper.createValidBooking(firstBookingPayload);
+        String firstBookingId = firstBookingResponse.jsonPath().get("id");
+
+        // Second booking starting 1 day before and finishing 1 day after
+        JSONObject secondBookingPayload = new JSONObject(firstBookingPayload.toString());
+        secondBookingPayload.put("startDate", addDaysToDate((LocalDate) firstBookingPayload.get("startDate"), -1).toString());
+        secondBookingPayload.put("endDate", addDaysToDate((LocalDate) firstBookingPayload.get("endDate"), 1).toString());
+
+        // Cancel first booking
+        authorizedBookingHelper.performCancelPatchRequest(firstBookingId);
+
+        // Second booking
+        Response response = authorizedBookingHelper.createValidBooking(secondBookingPayload);
+        response.then()
+                .statusCode(201)
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/booking/BookingCreationSchema.json")))
+                .body("status", is(secondBookingPayload.get("status")))
+                .body("propertyId", is(secondBookingPayload.get("propertyId")))
+                .body("startDate", is(castToDateList(secondBookingPayload.get("startDate").toString())))
+                .body("endDate", is(castToDateList(secondBookingPayload.get("endDate").toString())));
+    }
 }
