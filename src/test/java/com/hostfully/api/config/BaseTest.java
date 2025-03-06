@@ -54,7 +54,7 @@ public class BaseTest {
         RestAssured.requestSpecification = RestAssured.given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON);
-        RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
+        RestAssured.filters(new PrettyLoggingFilter());
 
     }
 
