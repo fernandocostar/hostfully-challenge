@@ -14,6 +14,11 @@ public class FileUtils {
 
     private static final Log log = LogFactory.getLog(FileUtils.class);
 
+    /**
+     * Reads a JSON file from given path and returns in String format.
+     * @param filePath JSON file path.
+     * @return the read JSON object in String format.
+     */
     public static String readJsonFile(String filePath) throws IOException {
         try {
             Path path = Paths.get(filePath);
