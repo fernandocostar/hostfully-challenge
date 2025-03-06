@@ -35,6 +35,9 @@ public class BookingCreationTests extends BaseTest {
     private static Stream<String> guestMandatoryAttributes() {
         return Stream.of("firstName", "lastName");
     }
+    private static Stream<String> bookingStatusesList() {
+        return Stream.of("CANCELLED", "SCHEDULED", "COMPLETED");
+    }
 
     @Test
     @DisplayName("POST /bookings fails on unauthorized access")
@@ -78,12 +81,14 @@ public class BookingCreationTests extends BaseTest {
                 .body("detail", is("Failed to read request"));
     }
 
-    @Test
+    @ParameterizedTest
+    @MethodSource("bookingStatusesList")
     @DisplayName("POST /bookings creates a booking successfully")
-    public void testCreateBookingReturnsSuccess() throws IOException {
+    public void testCreateBookingReturnsSuccess(String status) throws IOException {
         BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
 
         JSONObject requestPayload = createValidBookingPayload();
+        requestPayload.put("status", status);
         JSONObject requestGuest = (JSONObject) requestPayload.get("guest");
 
         List<Integer> expectedStartDate = castToDateList(requestPayload.get("startDate").toString());
