@@ -1,15 +1,18 @@
 package com.hostfully.api.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.restassured.filter.Filter;
 import io.restassured.filter.FilterContext;
 import io.restassured.response.Response;
 import io.restassured.specification.FilterableRequestSpecification;
 import io.restassured.specification.FilterableResponseSpecification;
 
 import java.time.LocalDateTime;
-import io.restassured.filter.Filter;
 
 public class PrettyLoggingFilter implements Filter {
+
+    private static final int BODY_LIMIT = 1500;
+
     @Override
     public Response filter(FilterableRequestSpecification requestSpec, FilterableResponseSpecification responseSpec, FilterContext ctx) {
         System.out.println("\n┌────────────────────────────────────────────────");
@@ -22,7 +25,7 @@ public class PrettyLoggingFilter implements Filter {
 
         if (requestSpec.getBody() != null) {
             System.out.println("│ Body: ");
-            System.out.println("│   " + requestSpec.getBody().toString().replace("\n", "\n│   "));
+            logLimitedBody(requestSpec.getBody().toString());
         }
 
         Response response = ctx.next(requestSpec, responseSpec);
@@ -39,13 +42,13 @@ public class PrettyLoggingFilter implements Filter {
             String responseBody = response.getBody().asString();
             if (responseBody != null && !responseBody.isEmpty()) {
                 System.out.println("│ Body: ");
-                if (response.getContentType().contains("json")) {
+                if (response.getContentType() != null && response.getContentType().contains("json")) {
                     ObjectMapper mapper = new ObjectMapper();
                     Object json = mapper.readValue(responseBody, Object.class);
                     String indented = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(json);
-                    System.out.println("│   " + indented.replace("\n", "\n│   "));
+                    logLimitedBody(indented);
                 } else {
-                    System.out.println("│   " + responseBody.replace("\n", "\n│   "));
+                    logLimitedBody(responseBody);
                 }
             }
         } catch (Exception e) {
@@ -55,5 +58,17 @@ public class PrettyLoggingFilter implements Filter {
         System.out.println("└────────────────────────────────────────────────\n");
 
         return response;
+    }
+
+    /**
+     * Logs a truncated version of the body if it's too long.
+     */
+    private void logLimitedBody(String body) {
+        if (body.length() > BODY_LIMIT) {
+            System.out.println("│   " + body.substring(0, BODY_LIMIT).replace("\n", "\n│   ") + "...");
+            System.out.println("│   [TRUNCATED: " + body.length() + " characters]");
+        } else {
+            System.out.println("│   " + body.replace("\n", "\n│   "));
+        }
     }
 }
