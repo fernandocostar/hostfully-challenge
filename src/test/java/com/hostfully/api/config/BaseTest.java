@@ -1,7 +1,6 @@
 package com.hostfully.api.config;
 
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
+import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.http.ContentType;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,7 +53,7 @@ public class BaseTest {
         RestAssured.requestSpecification = RestAssured.given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON);
-        RestAssured.filters(new PrettyLoggingFilter());
+        RestAssured.filters(new PrettyLoggingFilter(), new AllureRestAssured());
 
     }
 
