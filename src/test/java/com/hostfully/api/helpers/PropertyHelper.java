@@ -1,14 +1,9 @@
 package com.hostfully.api.helpers;
 
-import io.restassured.module.jsv.JsonSchemaValidator;
 import io.restassured.response.Response;
 import org.json.JSONObject;
 
-import java.io.IOException;
-
-import static com.hostfully.api.utils.FileUtils.readJsonFile;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.is;
 
 public class PropertyHelper {
 

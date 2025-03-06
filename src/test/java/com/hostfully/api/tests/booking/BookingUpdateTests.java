@@ -22,23 +22,6 @@ public class BookingUpdateTests extends BaseTest {
     //TODO: decouple test cases from create valid booking, these endpoints should not depend on external features
 
     @Test
-    @DisplayName("PATCH /bookings/{bookingId}/cancel - cancel booking successfully")
-    public void testCancelBookingSuccessfully() throws IOException {
-        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
-
-        //Create booking
-        JSONObject requestPayload = createValidBookingPayload();
-        Response response = authorizedBookingHelper.createValidBooking(requestPayload);
-        String bookingId = response.jsonPath().get("id");
-
-        Response cancelResponse = authorizedBookingHelper.performCancelPatchRequest(bookingId);
-        cancelResponse.then()
-                .statusCode(200)
-                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/booking/BookingCreationSchema.json")))
-                .body("status", is("CANCELLED"));
-    }
-
-    @Test
     @DisplayName("PATCH /bookings/{bookingId}/cancel - cancel booking with invalid bookingId")
     public void testErrorCancelBookingInvalidBookingId() {
         BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
@@ -48,6 +31,8 @@ public class BookingUpdateTests extends BaseTest {
                 .statusCode(400)
                 .body("title", is("Bad Request"));
     }
+
+    //TESTS DEPENDS ON BOOKING CREATION
 
     @Test
     @DisplayName("PATCH /bookings/{bookingId}/guest - change booking guest successfully")
@@ -88,6 +73,23 @@ public class BookingUpdateTests extends BaseTest {
                 .body("detail", is("Booking is not cancelled, cannot rebook"))
                 .body("instance", is("/bookings/" + bookingId + "/rebook"))
                 .body("CANNOT_REBOOK_NOT_CANCELLED_BOOKING", is("CANNOT_REBOOK_NOT_CANCELLED_BOOKING"));
+    }
+
+    @Test
+    @DisplayName("PATCH /bookings/{bookingId}/cancel - cancel booking")
+    public void testCancelBookingSuccessfully() throws IOException {
+        BookingHelper authorizedBookingHelper = new BookingHelper(username, password);
+
+        //Create booking
+        JSONObject requestPayload = createValidBookingPayload();
+        Response response = authorizedBookingHelper.createValidBooking(requestPayload);
+        String bookingId = response.jsonPath().get("id");
+
+        Response cancelResponse = authorizedBookingHelper.performCancelPatchRequest(bookingId);
+        cancelResponse.then()
+                .statusCode(200)
+                .body(JsonSchemaValidator.matchesJsonSchema(readJsonFile("src/test/resources/schemas/booking/BookingCreationSchema.json")))
+                .body("status", is("CANCELLED"));
     }
 
     @Test

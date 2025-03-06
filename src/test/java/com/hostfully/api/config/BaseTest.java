@@ -17,7 +17,6 @@ import java.util.Properties;
 public class BaseTest {
 
     private static final Log log = LogFactory.getLog(BaseTest.class);
-    private static TestInfo testInfo;
 
     protected static final String BASE_URL = "https://qa-assessment.svc.hostfully.com";
 
