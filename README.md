@@ -154,17 +154,22 @@ This will execute the tests in your project.
 After running your tests, you can generate the Allure report by running:
 
 ```sh
-mvn allure:report
+allure generate allure-results -o allure-report --clean
 ```
 
-This will generate the Allure report in the `target/allure-results` directory.
+This will generate the Allure report in the `allure-results` directory.
+
+An alternative is to generate a single file format, which results in an html file and does not depend on allure to open - just open the file itself is enough
+```sh
+allure generate allure-results -o allure-report --clean --single-file
+```
 
 ## 7. Open the Allure Report
 
 Once the report is generated, you can open it using the following command:
 
 ```sh
-mvn allure:serve
+allure open allure-report
 ```
 
 This will automatically start a web server and open the Allure report in your default browser.
