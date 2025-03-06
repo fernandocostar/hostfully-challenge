@@ -52,7 +52,7 @@ This guide will walk you through setting up the necessary environment, installin
 ## Prerequisites
 
 - **Java**: Version 21
-- **Maven**: Version 3.9.5
+- **Maven**: Version 3.9.5 - for build orchestration and dependency management
 - **Allure**: For generating and viewing test reports
 
 ## 1. Install Java
